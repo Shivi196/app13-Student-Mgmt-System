@@ -1,7 +1,9 @@
 import sys
 
 from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QApplication,QLabel,QGridLayout,QMainWindow
+from PyQt6.QtWidgets import QApplication, QLabel, QGridLayout, QMainWindow, \
+    QTableWidget
+
 
 class MainWindow(QMainWindow):
 
@@ -23,7 +25,11 @@ class MainWindow(QMainWindow):
         help_menu_item.addAction(about_action)
         about_action.setMenuRole(QAction.MenuRole.NoRole)
 
-
+#       Add table to the centre of the widget
+        self.table = QTableWidget()
+        self.table.setColumnCount(4)
+        self.table.setHorizontalHeaderLabels(("Id","Name","Course","Mobile"))
+        self.setCentralWidget(self.table)
 
 # Routine call for running gui app
 app = QApplication(sys.argv)
