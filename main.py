@@ -1,10 +1,10 @@
 import sqlite3
 import sys
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QApplication, QLabel, QGridLayout, QMainWindow, \
     QTableWidget, QTableWidgetItem, QDialog, QLineEdit, QComboBox, QPushButton, \
-    QVBoxLayout
+    QVBoxLayout, QToolBar
 
 
 class MainWindow(QMainWindow):
@@ -13,6 +13,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         # Set the title for the GUI App
         self.setWindowTitle("Student Management System")
+        self.setMinimumSize(800,600)
 
         # Add a MenuBar items
         file_menu_item = self.menuBar().addMenu("&File")
@@ -20,7 +21,7 @@ class MainWindow(QMainWindow):
         edit_menu_item = self.menuBar().addMenu("&Edit")
 
         # Add the subitem  Add Student of File item in MenuBar
-        add_student_action = QAction("Add Student",self)
+        add_student_action = QAction(QIcon("icons/add.png"),"Add Student",self)
         file_menu_item.addAction(add_student_action)
         add_student_action.triggered.connect(self.insert)
 
@@ -30,7 +31,7 @@ class MainWindow(QMainWindow):
         about_action.setMenuRole(QAction.MenuRole.NoRole)
 
 #         Add the subitem Search of Edit item in Menubar
-        search_action = QAction("Search",self)
+        search_action = QAction(QIcon("icons/search.png"),"Search",self)
         edit_menu_item.addAction(search_action)
         search_action.triggered.connect(self.search)
 
@@ -41,6 +42,13 @@ class MainWindow(QMainWindow):
         self.table.setHorizontalHeaderLabels(("Id","Name","Course","Mobile"))
         self.table.verticalHeader().setVisible(False) #make the index col invisible from the gui
         self.setCentralWidget(self.table)
+
+        # Create toolbar and Add toolbar elements
+        toolbar = QToolBar()
+        toolbar.setMovable(True)
+        self.addToolBar(toolbar)
+        toolbar.addAction(search_action)
+        toolbar.addAction(add_student_action)
 
     def load_data(self):
 #       Populate SQL table with Data
@@ -56,6 +64,7 @@ class MainWindow(QMainWindow):
                 print(row_data)
                 self.table.setItem(row_number,column_number,QTableWidgetItem(str(column_data)))
         connection.close()
+
 
     def insert(self):
         insert_dialog = InsertDialog()
