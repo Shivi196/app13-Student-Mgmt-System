@@ -1,10 +1,13 @@
 import sqlite3
 import sys
+from pty import CHILD
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QApplication, QLabel, QGridLayout, QMainWindow, \
     QTableWidget, QTableWidgetItem, QDialog, QLineEdit, QComboBox, QPushButton, \
-    QVBoxLayout, QToolBar
+    QVBoxLayout, QToolBar, QStatusBar
+# from PyQt6.QtWidgets.QMainWindow import statusBar
 
 
 class MainWindow(QMainWindow):
@@ -50,6 +53,28 @@ class MainWindow(QMainWindow):
         toolbar.addAction(search_action)
         toolbar.addAction(add_student_action)
 
+    #     Create statusbar and add statusbar elements
+        self.statusbar = QStatusBar()
+        self.setStatusBar(self.statusbar)
+
+        # Detect a cell clicked
+        self.table.cellClicked.connect(self.cell_clicked)
+
+    def cell_clicked(self):
+
+        children = self.findChildren(QPushButton)
+        if children:
+            for child in children:
+                self.statusbar.removeWidget(child)
+
+        edit_button = QPushButton("Edit Record")
+        edit_button.clicked.connect(self.edit)
+        delete_button = QPushButton("Delete Record")
+        delete_button.clicked.connect(self.delete)
+        self.statusbar.addWidget(edit_button)
+        self.statusbar.addWidget(delete_button)
+
+
     def load_data(self):
 #       Populate SQL table with Data
         connection = sqlite3.Connection("database.db")
@@ -73,6 +98,14 @@ class MainWindow(QMainWindow):
     def search(self):
         search_dialog = SearchDialog()
         search_dialog.exec()
+
+    def edit(self):
+        edit_dialog = EditDialog()
+        edit_dialog.exec()
+
+    def delete(self):
+        delete_dialog = DeleteDialog()
+        delete_dialog.exec()
 
 class InsertDialog(QDialog):
     def __init__(self):
@@ -156,6 +189,11 @@ class SearchDialog(QDialog):
         cursor.close()
         connection.close()
 
+class EditDialog(QDialog):
+    pass
+
+class DeleteDialog(QDialog):
+    pass
 
 
 # Routine call for running gui app
