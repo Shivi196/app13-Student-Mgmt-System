@@ -1,8 +1,9 @@
+import sqlite3
 import sys
 
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QApplication, QLabel, QGridLayout, QMainWindow, \
-    QTableWidget
+    QTableWidget, QTableWidgetItem
 
 
 class MainWindow(QMainWindow):
@@ -29,10 +30,30 @@ class MainWindow(QMainWindow):
         self.table = QTableWidget()
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(("Id","Name","Course","Mobile"))
+        self.table.verticalHeader().setVisible(False) #make the index col invisible from the gui
         self.setCentralWidget(self.table)
+
+    def load_data(self):
+#       Populate SQL table with Data
+        connection = sqlite3.Connection("database.db")
+        data = connection.execute("SELECT * FROM students")
+        # print(list(data))
+#  below code set rows to 0 so that duplicates won't enter everytime code runs
+        self.table.setRowCount(0)
+# Connecting the table structure with the data in database
+        for row_number, row_data in enumerate(data):
+            self.table.insertRow(row_number)
+            for column_number,column_data in enumerate(row_data):
+                print(row_data)
+                self.table.setItem(row_number,column_number,QTableWidgetItem(str(column_data)))
+        connection.close()
+
+
+
 
 # Routine call for running gui app
 app = QApplication(sys.argv)
 main_window = MainWindow()
 main_window.show()
+main_window.load_data()
 sys.exit(app.exec())
