@@ -1,6 +1,6 @@
 import sqlite3
 import sys
-
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QApplication, QLabel, QGridLayout, QMainWindow, \
     QTableWidget, QTableWidgetItem, QDialog, QLineEdit, QComboBox, QPushButton, \
@@ -15,18 +15,25 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Student Management System")
 
         # Add a MenuBar items
-        file_menu_item = self.menuBar().addMenu("File")
-        help_menu_item = self.menuBar().addMenu("Help")
+        file_menu_item = self.menuBar().addMenu("&File")
+        help_menu_item = self.menuBar().addMenu("&Help")
+        edit_menu_item = self.menuBar().addMenu("&Edit")
 
         # Add the subitem  Add Student of File item in MenuBar
         add_student_action = QAction("Add Student",self)
-        add_student_action.triggered.connect(self.insert)
         file_menu_item.addAction(add_student_action)
+        add_student_action.triggered.connect(self.insert)
 
         # Add the subitem  About of Help item in MenuBar
         about_action = QAction("About",self)
         help_menu_item.addAction(about_action)
         about_action.setMenuRole(QAction.MenuRole.NoRole)
+
+#         Add the subitem Search of Edit item in Menubar
+        search_action = QAction("Search",self)
+        edit_menu_item.addAction(search_action)
+        search_action.triggered.connect(self.search)
+
 
 #       Add table to the centre of the widget
         self.table = QTableWidget()
@@ -53,6 +60,10 @@ class MainWindow(QMainWindow):
     def insert(self):
         insert_dialog = InsertDialog()
         insert_dialog.exec()
+
+    def search(self):
+        search_dialog = SearchDialog()
+        search_dialog.exec()
 
 class InsertDialog(QDialog):
     def __init__(self):
@@ -93,11 +104,49 @@ class InsertDialog(QDialog):
         mobile = self.mobile.text()
         connection = sqlite3.Connection("database.db")
         cursor = connection.cursor()
-        cursor.execute("INSERT INTO STUDENTS (name,course,mobile) VALUES (?,?,?)",(name,course,mobile))
+        cursor.execute("INSERT INTO students(name,course,mobile) VALUES (?,?,?)",(name,course,mobile))
         connection.commit()
         cursor.close()
         connection.close()
         main_window.load_data()  #for loading the insert data on run time in the main window
+
+class SearchDialog(QDialog):
+
+    def __init__(self):
+        super().__init__()
+        # Set search window title and size
+        self.setWindowTitle("Search Student")
+        self.setFixedWidth(300)
+        self.setFixedHeight(300)
+
+        # Create layout and input widget
+        layout = QVBoxLayout()
+        self.search_name = QLineEdit()
+        self.search_name.setPlaceholderText("Name")
+        layout.addWidget(self.search_name)
+
+        # Create Button
+        self.search_button = QPushButton("Search")
+        self.search_button.clicked.connect(self.search_student)
+        layout.addWidget(self.search_button)
+
+        self.setLayout(layout)
+
+    def search_student(self):
+        name = self.search_name.text()
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        result = cursor.execute(f"Select * FROM students where name = ?",(name,))
+        rows = list(result)
+        print(rows)
+        items = main_window.table.findItems(name,Qt.MatchFlag.MatchFixedString)
+        for item in items:
+            print(item)
+            main_window.table.item(item.row(),1).setSelected(True)
+
+        cursor.close()
+        connection.close()
+
 
 
 # Routine call for running gui app
