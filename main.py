@@ -1,5 +1,6 @@
 import sqlite3
 import sys
+from idlelib.help_about import AboutDialog
 from pty import CHILD
 
 from PyQt6.QtCore import Qt
@@ -11,6 +12,13 @@ from PyQt6.QtWidgets import QApplication, QLabel, QGridLayout, QMainWindow, \
 
 # from PyQt6.QtWidgets.QMainWindow import statusBar
 
+class DatabaseConnection():
+    def __init__(self,database_file= "database.db"):
+        self.database_file = database_file
+
+    def connect(self):
+        connection = sqlite3.connect(self.database_file)
+        return connection
 
 class MainWindow(QMainWindow):
 
@@ -33,7 +41,8 @@ class MainWindow(QMainWindow):
         # Add the subitem  About of Help item in MenuBar
         about_action = QAction("About",self)
         help_menu_item.addAction(about_action)
-        about_action.setMenuRole(QAction.MenuRole.NoRole)
+        about_action.setMenuRole(QAction.MenuRole.NoRole) #this line is for mac users who can't see help icon in menubar
+        about_action.triggered.connect(self.about)
 
 #         Add the subitem Search of Edit item in Menubar
         search_action = QAction(QIcon("icons/search.png"),"Search",self)
@@ -79,7 +88,7 @@ class MainWindow(QMainWindow):
 
     def load_data(self):
 #       Populate SQL table with Data
-        connection = sqlite3.Connection("database.db")
+        connection = DatabaseConnection().connect()
         data = connection.execute("SELECT * FROM students")
         # print(list(data))
 #  below code set rows to 0 so that duplicates won't enter everytime code runs
@@ -108,6 +117,10 @@ class MainWindow(QMainWindow):
     def delete(self):
         delete_dialog = DeleteDialog()
         delete_dialog.exec()
+
+    def about(self):
+        about_dialog = AboutDialog()
+        about_dialog.exec()
 
 class InsertDialog(QDialog):
     def __init__(self):
@@ -146,7 +159,7 @@ class InsertDialog(QDialog):
         name = self.student_name.text()
         course = self.course_name.itemText(self.course_name.currentIndex()) #you can use directly self.course.currentText() method instead of itemText
         mobile = self.mobile.text()
-        connection = sqlite3.Connection("database.db")
+        connection = DatabaseConnection().connect()
         cursor = connection.cursor()
         cursor.execute("INSERT INTO students(name,course,mobile) VALUES (?,?,?)",(name,course,mobile))
         connection.commit()
@@ -178,7 +191,7 @@ class SearchDialog(QDialog):
 
     def search_student(self):
         name = self.search_name.text()
-        connection = sqlite3.connect("database.db")
+        connection = DatabaseConnection().connect()
         cursor = connection.cursor()
         result = cursor.execute(f"Select * FROM students where name = ?",(name,))
         rows = list(result)
@@ -233,7 +246,7 @@ class EditDialog(QDialog):
         self.setLayout(layout)
 
     def update_students(self):
-        connection = sqlite3.connect("database.db")
+        connection = DatabaseConnection().connect()
         cursor = connection.cursor()
         cursor.execute("UPDATE students set name = ?, course = ? , mobile = ? WHERE id = ?",
                        (
@@ -244,8 +257,16 @@ class EditDialog(QDialog):
         connection.commit()
         cursor.close()
         connection.close()
+
 #         Refresh the Table in main window
         main_window.load_data()
+        self.close()
+
+        confirmation_message = QMessageBox()
+        confirmation_message.setWindowTitle("Success")
+        confirmation_message.setText("Updated record success!")
+        confirmation_message.exec()
+
 
 class DeleteDialog(QDialog):
     def __init__(self):
@@ -272,7 +293,7 @@ class DeleteDialog(QDialog):
         index = main_window.table.currentRow()
         student_id = main_window.table.item(index, 0).text()
 
-        connection = sqlite3.connect("database.db")
+        connection = DatabaseConnection().connect()
         cursor = connection.cursor()
         cursor.execute("DELETE from students where id = ?", (student_id,))
         connection.commit()
@@ -287,6 +308,14 @@ class DeleteDialog(QDialog):
         confirmation_message.setText("The record was successfully deleted!!")
         confirmation_message.exec()
 
+class AboutDialog(QMessageBox):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("About")
+        content = """ This is About page of my Student system mgmt App /
+        Feel free to use this code.. thanks!!
+        """
+        self.setText(content)
 
 # Routine call for running gui app
 app = QApplication(sys.argv)
